@@ -207,6 +207,14 @@ const DoctorDashboard = () => {
                             >
                                 🔍 Second Opinions
                             </Link>
+                            {isPro && (
+                                <Link
+                                    to="/demand-hotspot"
+                                    className="block w-full text-left p-3 md:p-4 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition text-sm md:text-base"
+                                >
+                                    📊 Demand Insights
+                                </Link>
+                            )}
                         </div>
                     </div>
                     {/* Today's Appointments */}

@@ -168,3 +168,7 @@ export const verifySecondOpinionPayment = (id, paymentData) => API.post(`/second
 
 // === Profile Routes ===
 export const deleteMyProfile = () => API.delete('/profile/me');
+
+// === Demand Insights Routes ===
+export const getDemandInsights = (params) => API.get('/professionals/demand-insights', { params });
+export const getDemandInsightsSummary = (params) => API.get('/professionals/demand-insights/summary', { params });

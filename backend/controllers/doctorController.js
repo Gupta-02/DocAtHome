@@ -1,5 +1,6 @@
 /* eslint-disable quotes */
 const User = require("../models/User");
+const SearchLog = require("../models/SearchLog");
 const asyncHandler = require("../middleware/asyncHandler");
 
 // Helper function to get approximate city coordinates
@@ -382,6 +383,33 @@ const searchDoctors = asyncHandler(async (req, res) => {
   const { specialty, city, lat, lng, minExperience, maxExperience, sortBy } =
     req.query;
   const query = { role: "doctor", isVerified: true };
+
+  // Log the search for demand insights (anonymized)
+  try {
+    let searchArea = city || 'Unknown';
+    let searchLat = null;
+    let searchLng = null;
+
+    if (lat && lng) {
+      searchLat = parseFloat(lat);
+      searchLng = parseFloat(lng);
+      // For now, use city as area when coordinates are provided
+      // In a real implementation, you might reverse geocode to get area name
+      searchArea = city || 'Unknown Area';
+    }
+
+    await SearchLog.create({
+      city: city || 'Unknown',
+      area: searchArea,
+      specialty: specialty || 'General',
+      searchType: 'doctor',
+      latitude: searchLat,
+      longitude: searchLng,
+    });
+  } catch (error) {
+    console.error('Error logging search:', error);
+    // Don't fail the search if logging fails
+  }
 
   // Apply filters
   if (specialty) {

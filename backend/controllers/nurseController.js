@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const SearchLog = require('../models/SearchLog');
 const asyncHandler = require('../middleware/asyncHandler');
 
 // Helper function to get approximate city coordinates
@@ -68,6 +69,33 @@ exports.getNurses = asyncHandler(async (req, res) => {
     }
 
     const { lat, lng, radius = 10 } = req.query; // Default 10km radius
+
+    // Log the search for demand insights (anonymized)
+    try {
+      let searchArea = req.query.city || 'Unknown';
+      let searchLat = null;
+      let searchLng = null;
+
+      if (lat && lng) {
+        searchLat = parseFloat(lat);
+        searchLng = parseFloat(lng);
+        // For now, use city as area when coordinates are provided
+        searchArea = req.query.city || 'Unknown Area';
+      }
+
+      await SearchLog.create({
+        city: req.query.city || 'Unknown',
+        area: searchArea,
+        specialty: req.query.specialty || 'General',
+        searchType: 'nurse',
+        latitude: searchLat,
+        longitude: searchLng,
+      });
+    } catch (error) {
+      console.error('Error logging search:', error);
+      // Don't fail the search if logging fails
+    }
+
     let nurses;
 
     if (lat && lng) {
