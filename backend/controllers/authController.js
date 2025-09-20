@@ -419,6 +419,44 @@ exports.register = catchAsync(async (req, res, next) => {
   // Create new user
   const newUser = new User(userData);
 
+    // --- Automated Checks for Fraud Prevention ---
+    const flags = [];
+
+    // 1. Duplicate govId or phone check (for professionals)
+    if ((role === 'doctor' || role === 'nurse') && govId) {
+      const duplicateGovId = await User.findOne({ govId: govId.trim(), role: { $in: ['doctor', 'nurse'] } });
+      if (duplicateGovId) flags.push('DUPLICATE_GOV_ID');
+    }
+    if (req.body.phone) {
+      const duplicatePhone = await User.findOne({ phone: req.body.phone.trim() });
+      if (duplicatePhone) flags.push('DUPLICATE_PHONE');
+    }
+
+    // 2. Disposable email check (using block-disposable-email.com API)
+    try {
+      const fetch = require('node-fetch');
+      const emailCheckRes = await fetch(`https://api.block-disposable-email.com/api/v1/check/${encodeURIComponent(email.toLowerCase())}`);
+      const emailCheckData = await emailCheckRes.json();
+      if (emailCheckData && emailCheckData.blocked) {
+        flags.push('DISPOSABLE_EMAIL');
+      }
+    } catch (err) {
+      // If API fails, do not block registration, but log error
+      logger.warn('Disposable email check failed', { error: err.message });
+    }
+
+    // 3. License number format validation (example: Medical Council of India format)
+    if ((role === 'doctor' || role === 'nurse') && licenseNumber) {
+      // Example regex: MCI/12345 (change as per actual council format)
+      const mciRegex = /^MCI\/\d{5}$/;
+      if (!mciRegex.test(licenseNumber.trim())) {
+        flags.push('INVALID_LICENSE_FORMAT');
+      }
+    }
+
+    // Attach flags to user
+    newUser.flags = flags;
+
   await newUser.save();
 
   // Create JWT token

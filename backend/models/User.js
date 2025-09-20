@@ -155,6 +155,13 @@ const UserSchema = new mongoose.Schema({
     default: Date.now,
   },
 
+    // --- Automated Flags for Admin Review ---
+    flags: {
+      type: [String],
+      default: [],
+      description: 'Automated flags for potential issues (e.g., DUPLICATE_GOV_ID, DISPOSABLE_EMAIL, INVALID_LICENSE_FORMAT)'
+    },
+
   createdAt: {
     type: Date,
     default: Date.now,
