@@ -4,6 +4,7 @@ import { searchDoctors } from "../api"; // Assuming your AI call is separate for
 import toast from "react-hot-toast";
 import DoctorCardSkeleton from "../components/DoctorCardSkeleton";
 import Modal from "../components/Modal";
+import SymptomBodyMap from "../components/SymptomBodyMap";
 import axios from "axios"; // Keep for the separate AI call
 
 const doctorSpecialties = ["Cardiologist", "Dermatologist", "Gynecologist", "Dentist", "Pediatrician", "General Physician", "Neurologist"];
@@ -26,6 +27,8 @@ const SearchDoctorsPage = () => {
     const [aiSuggestion, setAISuggestion] = useState("");
     const [aiReasoning, setAIReasoning] = useState("");
     const [aiLoading, setAILoading] = useState(false);
+
+    const [showBodyMapModal, setShowBodyMapModal] = useState(false);
 
     const fetchDoctors = useCallback(async (currentFilters, page = 1) => {
         setIsLoading(true);
@@ -102,6 +105,16 @@ const SearchDoctorsPage = () => {
         setAIReasoning("");
     };
 
+    const handleBodyMapModalOpen = () => setShowBodyMapModal(true);
+    const handleBodyMapModalClose = () => setShowBodyMapModal(false);
+
+    const handleSpecialtySuggested = (specialty, reasoning) => {
+        setFilters(f => ({ ...f, specialty }));
+        setAISuggestion(specialty);
+        setAIReasoning(reasoning);
+        toast.success(`AI suggests: ${specialty}`);
+    };
+
     const handleAISubmit = async () => {
         if (!symptomsInput.trim()) return toast.error("Please enter your symptoms.");
         setAILoading(true);
@@ -135,12 +148,15 @@ const SearchDoctorsPage = () => {
                     {/* All filter inputs go here... */}
                     <div className="mb-6">
                         <label className="block text-slate-700 dark:text-secondary-text mb-2 font-semibold">Specialty</label>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 mb-2">
                             <select name="specialty" value={filters.specialty} onChange={handleFilterChange} className="w-full p-3 bg-gray-200 dark:bg-primary-dark text-black dark:text-white rounded border-gray-700">
                                 <option value="">All Specialties</option>
                                 {doctorSpecialties.map(spec => <option key={spec} value={spec}>{spec}</option>)}
                             </select>
-                            <button type="button" className="bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 font-semibold" onClick={handleAIModalOpen}>Help</button>
+                        </div>
+                        <div className="flex gap-2">
+                            <button type="button" className="bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 font-semibold text-sm" onClick={handleAIModalOpen}>Text Input</button>
+                            <button type="button" className="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 font-semibold text-sm" onClick={handleBodyMapModalOpen}>Body Map</button>
                         </div>
                     </div>
                     {/* ... other filters like city, experience, etc. */}
@@ -207,6 +223,14 @@ const SearchDoctorsPage = () => {
                 <textarea value={symptomsInput} onChange={(e) => setSymptomsInput(e.target.value)} rows={4} className="w-full p-2 border rounded mt-4" placeholder="e.g., 'I have a persistent headache...'"></textarea>
                 <button onClick={handleAISubmit} disabled={aiLoading} className="w-full bg-blue-600 text-white p-3 rounded mt-4">{aiLoading ? 'Analyzing...' : 'Get AI Recommendation'}</button>
                 {aiSuggestion && <div><p>We recommend seeing a <strong>{aiSuggestion}</strong>.</p><p>{aiReasoning}</p></div>}
+            </Modal>
+
+            {/* Body Map Modal */}
+            <Modal isOpen={showBodyMapModal} onClose={handleBodyMapModalClose}>
+                <SymptomBodyMap
+                    onSpecialtySuggested={handleSpecialtySuggested}
+                    onClose={handleBodyMapModalClose}
+                />
             </Modal>
         </div>
     );
