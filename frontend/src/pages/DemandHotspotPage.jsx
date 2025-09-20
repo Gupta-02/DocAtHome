@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { getDemandInsights, getDemandInsightsSummary } from '../api';
@@ -29,11 +29,6 @@ const DemandHotspotPage = () => {
     specialty: '',
     days: 30
   });
-
-  // Redirect if not Pro user
-  if (!user || user.subscriptionTier !== 'pro') {
-    return <Navigate to="/upgrade-pro" />;
-  }
 
   // Initialize map
   useEffect(() => {
@@ -75,7 +70,7 @@ const DemandHotspotPage = () => {
   }, []);
 
   // Fetch demand data
-  const fetchDemandData = async () => {
+  const fetchDemandData = useCallback(async () => {
     try {
       setLoading(true);
       const [insightsResponse, summaryResponse] = await Promise.all([
@@ -95,7 +90,7 @@ const DemandHotspotPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
   // Update heatmap with new data
   const updateHeatmap = (data) => {
@@ -122,7 +117,12 @@ const DemandHotspotPage = () => {
   // Load data on component mount and when filters change
   useEffect(() => {
     fetchDemandData();
-  }, [filters]);
+  }, [fetchDemandData]);
+
+  // Redirect if not Pro user - MUST be after all hooks
+  if (!user || user.subscriptionTier !== 'pro') {
+    return <Navigate to="/upgrade-pro" />;
+  }
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
