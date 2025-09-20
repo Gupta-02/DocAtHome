@@ -22,10 +22,10 @@ const LabTestSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide the collection address.'],
   },
-  status: {
-    type: String,
-    enum: ['Pending', 'Sample Collected', 'Report Ready', 'Completed'],
-    default: 'Pending',
+  technician: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'User',
+    required: false, // Will be assigned when booking
   },
   // The fee includes the visit charge + transportation
   totalFee: {

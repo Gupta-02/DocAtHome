@@ -93,6 +93,8 @@ export const createDonationOrder = (donationData) => API.post('/care-fund/donate
 
 // === Lab Test & Ambulance Routes ===
 export const bookLabTest = (testData) => API.post('/lab-tests', testData);
+export const getTechnicianLabTests = () => API.get('/lab-tests/technician');
+export const updateLabTestStatus = (testId, statusData) => API.put(`/lab-tests/${testId}/status`, statusData);
 export const bookAmbulance = (bookingData) => API.post('/ambulance/book', bookingData);
 export const updateDriverStatus = (statusData) => API.put('/profile/me/driver-status', statusData);
 export const respondToAmbulanceRequest = (response) => API.post('/ambulance/respond', response);
